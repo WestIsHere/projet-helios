@@ -26,6 +26,7 @@
             width: 100vw;
             font-size: 19px;
             text-shadow: 0 0 2px var(--dim-color);
+            cursor: crosshair; /* Curseur style visée */
         }
 
         /* Effet d'écran CRT */
@@ -54,7 +55,7 @@
             z-index: 100;
             display: flex;
             flex-direction: column;
-            align-items: center; /* Centrer le contenu */
+            align-items: center; 
         }
 
         /* LOGO DE DÉMARRAGE */
@@ -67,7 +68,6 @@
         .ccg-logo-img {
             width: 180px;
             height: auto;
-            /* C'est ici que la magie opère : on transforme une image N&B en bleu cybernétique */
             filter: brightness(0.6) sepia(1) hue-rotate(160deg) saturate(5) contrast(1.2);
         }
 
@@ -92,31 +92,28 @@
             background-color: var(--bg-color);
             position: relative;
             z-index: 1;
-            /* Grille de fond subtile */
             background-image: 
                 linear-gradient(rgba(0, 229, 255, 0.05) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(0, 229, 255, 0.05) 1px, transparent 1px);
             background-size: 40px 40px;
         }
 
-        /* LOGO EN FOND D'ÉCRAN (WATERMARK) */
+        /* LOGO EN FOND D'ÉCRAN */
         #desktop::before {
             content: "";
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 50%; /* Taille du logo en fond */
+            width: 50%;
             height: 50%;
-            /* REMPLACEZ L'URL CI-DESSOUS PAR LE VRAI LOGO CCG SI VOUS L'AVEZ */
-            background-image: url('https://tokyo-ghoul.fr/wp-content/uploads/2021/01/CCG-logo-official.png');
+            background-image: url('https://placehold.co/800x800/000000/ffffff?text=CCG+LOGO+BACKGROUND');
             background-repeat: no-repeat;
             background-position: center;
             background-size: contain;
-            opacity: 0.1; /* Très transparent pour être subtil */
-            /* Teinte bleue pour le fond */
+            opacity: 0.1; 
             filter: brightness(0.5) sepia(1) hue-rotate(160deg) saturate(5);
-            z-index: -1; /* Derrière les icônes */
+            z-index: -1; 
             pointer-events: none;
         }
 
@@ -148,8 +145,19 @@
             display: flex; align-items: center;
         }
         .start-btn img { height: 20px; margin-right: 10px; filter: brightness(0); }
-        
         .start-btn:active { box-shadow: 1px 1px 0px var(--dim-color); transform: translate(2px, 2px); }
+
+        /* Bouton Audio */
+        .audio-btn {
+            margin-left: 20px;
+            cursor: pointer;
+            border: 1px solid var(--dim-color);
+            padding: 2px 10px;
+            font-size: 16px;
+            transition: 0.3s;
+        }
+        .audio-btn:hover { background: rgba(0, 229, 255, 0.2); }
+        .audio-btn.active { background: var(--main-color); color: black; font-weight: bold; }
 
         .clock { margin-left: auto; margin-right: 20px; font-size: 20px; }
 
@@ -272,6 +280,10 @@
 <body>
 
     <div class="crt-overlay"></div>
+
+    <audio id="bg-music" loop>
+        <source src="ost.mp3" type="audio/mpeg">
+    </audio>
 
     <div id="boot-screen">
         <div id="boot-logo-container">
@@ -437,6 +449,9 @@
             <div class="start-btn">
                 <img src="https://placehold.co/100x100/000000/ffffff?text=C" alt="C"> CCG OS
             </div>
+            
+            <div id="audio-control" class="audio-btn" onclick="toggleMusic()">🔇 AUDIO: OFF</div>
+
             <div style="margin-left: 15px; border-left: 1px solid var(--dim-color); padding-left: 10px;">
                 USER: 5128-KK [CONNECTED]
             </div>
@@ -445,6 +460,35 @@
     </div>
 
     <script>
+        // 0. AUDIO MANAGEMENT
+        const music = document.getElementById('bg-music');
+        const audioBtn = document.getElementById('audio-control');
+        music.volume = 0.5; // Volume à 50% pour ne pas exploser les oreilles
+
+        function toggleMusic() {
+            if (music.paused) {
+                music.play().then(() => {
+                    updateAudioBtn(true);
+                }).catch(e => {
+                    console.log("Erreur lecture:", e);
+                    alert("Erreur: Impossible de lire le fichier 'ost.mp3'. Vérifiez qu'il est bien sur GitHub.");
+                });
+            } else {
+                music.pause();
+                updateAudioBtn(false);
+            }
+        }
+
+        function updateAudioBtn(isPlaying) {
+            if (isPlaying) {
+                audioBtn.innerHTML = "🔊 AUDIO: ON";
+                audioBtn.classList.add('active');
+            } else {
+                audioBtn.innerHTML = "🔇 AUDIO: OFF";
+                audioBtn.classList.remove('active');
+            }
+        }
+
         // 1. BOOT SEQUENCE
         const bootLog = document.getElementById('boot-log');
         const bootLines = [
@@ -472,12 +516,20 @@
                 setTimeout(() => {
                     document.getElementById('boot-screen').style.display = 'none';
                     document.getElementById('desktop').style.display = 'block';
-                }, 1200); // Un peu plus de temps pour voir le logo de boot
+                    
+                    // TENTATIVE D'AUTO-PLAY DE LA MUSIQUE
+                    // Note: Cela échouera souvent si l'utilisateur n'a pas cliqué, c'est normal.
+                    music.play().then(() => {
+                        updateAudioBtn(true);
+                    }).catch(() => {
+                        console.log("Autoplay bloqué par le navigateur - Cliquez sur le bouton Audio");
+                    });
+
+                }, 1200); 
             }
         }
 
         window.onload = function() {
-            // Petit délai avant de lancer le texte pour voir le logo
             setTimeout(typeBoot, 500);
             startTime();
         };
