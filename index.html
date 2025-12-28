@@ -2,571 +2,281 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CCG SECURE ACCESS - COCHLÉA [BLUE]</title>
-    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+    <title>TERMINAL CCG - ACCÈS SÉCURISÉ</title>
     <style>
-        /* --- ESTHÉTIQUE GLOBALE (BLUE THEME) --- */
+        /* --- CSS GLOBALE ET AMBIANCE --- */
         :root {
-            --main-color: #00e5ff; /* Cyan Brillant */
-            --dim-color: #007ea7;  /* Bleu plus sombre */
-            --bg-color: #000810;   /* Fond presque noir bleuté */
-            --win-bg: #001525;     /* Fond des fenêtres */
-            --alert-color: #ff3333; /* Rouge pour les alertes */
+            --bg-color: #0a0a0a;
+            --screen-bg: #000000;
+            --text-color: #a0e7ff; /* Cyan pâle style terminal */
+            --alert-color: #ff3333; /* Rouge alerte */
+            --scan-line-color: rgba(160, 231, 255, 0.05);
         }
 
         body {
             margin: 0;
             padding: 0;
-            background-color: #000;
-            color: var(--main-color);
-            font-family: 'VT323', monospace;
-            overflow: hidden;
-            height: 100vh;
-            width: 100vw;
-            font-size: 19px;
-            text-shadow: 0 0 2px var(--dim-color);
-            cursor: crosshair; /* Curseur style visée */
-        }
-
-        /* Effet d'écran CRT */
-        .crt-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 10, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
-            background-size: 100% 2px, 3px 100%;
-            pointer-events: none;
-            z-index: 999;
-        }
-
-        /* --- ÉCRAN DE DÉMARRAGE (BOOT) --- */
-        #boot-screen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: #000;
-            padding: 30px;
-            box-sizing: border-box;
-            z-index: 100;
-            display: flex;
-            flex-direction: column;
-            align-items: center; 
-        }
-
-        /* LOGO DE DÉMARRAGE */
-        #boot-logo-container {
-            margin-bottom: 30px;
-            margin-top: 50px;
-            animation: flicker-logo 3s infinite;
-        }
-        
-        .ccg-logo-img {
-            width: 180px;
-            height: auto;
-            filter: brightness(0.6) sepia(1) hue-rotate(160deg) saturate(5) contrast(1.2);
-        }
-
-        .boot-text-container {
-            width: 100%;
-            text-align: left;
-        }
-        .boot-text { margin-bottom: 5px; color: var(--main-color); }
-
-        @keyframes flicker-logo {
-            0% { opacity: 0.8; }
-            50% { opacity: 1; filter: brightness(0.8) sepia(1) hue-rotate(160deg) saturate(6) contrast(1.5); }
-            100% { opacity: 0.8; }
-        }
-
-
-        /* --- BUREAU (DESKTOP) --- */
-        #desktop {
-            display: none;
-            width: 100%;
-            height: 100%;
             background-color: var(--bg-color);
-            position: relative;
-            z-index: 1;
-            background-image: 
-                linear-gradient(rgba(0, 229, 255, 0.05) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(0, 229, 255, 0.05) 1px, transparent 1px);
-            background-size: 40px 40px;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Courier New', Courier, monospace; /* Police style terminal */
+            overflow: hidden;
         }
 
-        /* LOGO EN FOND D'ÉCRAN */
-        #desktop::before {
+        #monitor-frame {
+            width: 90%;
+            max-width: 1000px;
+            height: 80vh;
+            background-color: var(--screen-bg);
+            border: 4px solid #333;
+            border-radius: 10px;
+            box-shadow: 0 0 30px rgba(0, 200, 255, 0.2) inset, 0 0 50px rgba(0,0,0,0.8);
+            position: relative;
+            overflow: hidden;
+            padding: 20px;
+        }
+
+        /* Effet de "Scan lines" (vieil écran cathodique) */
+        #monitor-frame::before {
             content: "";
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 50%;
-            height: 50%;
-            background-image: url('https://placehold.co/800x800/000000/ffffff?text=CCG+LOGO+BACKGROUND');
-            background-repeat: no-repeat;
-            background-position: center;
-            background-size: contain;
-            opacity: 0.1; 
-            filter: brightness(0.5) sepia(1) hue-rotate(160deg) saturate(5);
-            z-index: -1; 
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: repeating-linear-gradient(
+                to bottom,
+                var(--scan-line-color),
+                var(--scan-line-color) 2px,
+                transparent 2px,
+                transparent 4px
+            );
             pointer-events: none;
+            z-index: 100;
         }
 
-        /* Barre des tâches */
-        .taskbar {
-            position: absolute;
-            bottom: 0;
-            width: 100%;
-            height: 45px;
-            background-color: #002244;
-            border-top: 2px solid var(--main-color);
+        /* --- SEQUENCE DE BOOT --- */
+        #boot-sequence {
+            color: var(--text-color);
+            font-size: 1.2rem;
+            white-space: pre-wrap;
+        }
+        .boot-line {
+            opacity: 0;
+            animation: fadeIn 0.1s forwards;
+        }
+        .blink { animation: blinker 1s linear infinite; }
+        @keyframes blinker { 50% { opacity: 0; } }
+        @keyframes fadeIn { to { opacity: 1; } }
+
+        /* --- INTERFACE BUREAU (DESKTOP) --- */
+        #desktop-interface {
+            display: none; /* Caché pendant le boot */
+            height: 100%;
+            color: var(--text-color);
+        }
+
+        .top-bar {
+            border-bottom: 2px solid var(--text-color);
             display: flex;
-            align-items: center;
-            padding-left: 10px;
-            box-sizing: border-box;
-            box-shadow: 0 -5px 15px rgba(0, 229, 255, 0.1);
-            z-index: 10;
-        }
-
-        .start-btn {
-            background-color: var(--main-color);
-            color: #000;
-            padding: 5px 20px;
+            justify-content: space-between;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
             font-weight: bold;
-            font-size: 20px;
+        }
+
+        /* L'ONGLET "ALERTE" */
+        #alert-tab-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 60%;
+        }
+
+        .alert-button {
+            background-color: #2a0000;
+            border: 3px solid var(--alert-color);
+            color: var(--alert-color);
+            padding: 20px 40px;
+            font-family: inherit;
+            font-size: 1.5rem;
+            cursor: pointer;
             text-transform: uppercase;
-            cursor: pointer;
-            box-shadow: 3px 3px 0px var(--dim-color);
-            display: flex; align-items: center;
-        }
-        .start-btn img { height: 20px; margin-right: 10px; filter: brightness(0); }
-        .start-btn:active { box-shadow: 1px 1px 0px var(--dim-color); transform: translate(2px, 2px); }
-
-        /* Bouton Audio */
-        .audio-btn {
-            margin-left: 20px;
-            cursor: pointer;
-            border: 1px solid var(--dim-color);
-            padding: 2px 10px;
-            font-size: 16px;
-            transition: 0.3s;
-        }
-        .audio-btn:hover { background: rgba(0, 229, 255, 0.2); }
-        .audio-btn.active { background: var(--main-color); color: black; font-weight: bold; }
-
-        .clock { margin-left: auto; margin-right: 20px; font-size: 20px; }
-
-        /* Icônes */
-        .desktop-icon {
-            width: 110px;
-            text-align: center;
-            margin: 30px;
-            cursor: pointer;
-            display: inline-block;
-            border: 1px solid transparent;
-            padding: 10px;
-            transition: all 0.2s;
-            position: relative; z-index: 20;
+            letter-spacing: 2px;
+            position: relative;
+            box-shadow: 0 0 15px var(--alert-color);
+            transition: all 0.3s ease;
+            animation: pulseRed 2s infinite;
         }
 
-        .desktop-icon:hover {
-            background-color: rgba(0, 229, 255, 0.15);
-            border: 1px dotted var(--main-color);
+        .alert-button:hover {
+            background-color: var(--alert-color);
+            color: #000;
         }
 
-        .icon-img { font-size: 45px; display: block; margin-bottom: 5px; text-shadow: 0 0 5px var(--main-color); }
-        .icon-label { font-size: 16px; word-wrap: break-word; }
+        @keyframes pulseRed {
+            0% { box-shadow: 0 0 0 0 rgba(255, 51, 51, 0.7); }
+            70% { box-shadow: 0 0 0 20px rgba(255, 51, 51, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 51, 51, 0); }
+        }
 
-        /* --- FENÊTRE (WINDOW) --- */
-        .window {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 900px;
-            height: 700px;
-            background-color: var(--win-bg);
-            border: 2px solid var(--main-color);
-            box-shadow: 0 0 20px rgba(0, 229, 255, 0.2);
+        /* --- FENÊTRE MODALE DE LA LETTRE --- */
+        #letter-modal {
             display: none;
-            flex-direction: column;
-            z-index: 50;
+            position: absolute;
+            top: 5%; left: 5%; width: 90%; height: 90%;
+            background-color: rgba(0, 20, 30, 0.95);
+            border: 2px solid var(--text-color);
+            z-index: 200;
+            color: #ccc;
+            overflow-y: auto;
         }
 
-        .window-header {
-            background: linear-gradient(90deg, #002244, var(--dim-color));
-            color: #fff;
-            padding: 8px 10px;
+        .modal-header {
+            background-color: var(--text-color);
+            color: #000;
+            padding: 10px;
             font-weight: bold;
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid var(--main-color);
         }
 
-        .close-btn {
-            cursor: pointer;
-            background: #000;
-            color: var(--main-color);
-            border: 1px solid var(--main-color);
-            width: 25px;
-            height: 25px;
-            line-height: 22px;
-            text-align: center;
-            font-family: Arial, sans-serif;
-            font-weight: bold;
+        .close-btn { cursor: pointer; font-weight: bold; }
+        .close-btn:hover { color: var(--alert-color); }
+
+        .letter-content {
+            padding: 30px;
+            font-size: 1.1rem;
+            line-height: 1.6;
         }
-
-        .close-btn:hover { background: var(--alert-color); color: white; border-color: white; }
-
-        .window-body {
-            padding: 20px;
-            overflow-y: auto;
-            flex-grow: 1;
-        }
-
-        /* --- ONGLETS --- */
-        .tabs { border-bottom: 2px solid var(--main-color); margin-bottom: 20px; display: flex; flex-wrap: wrap; }
-        .tab-btn {
-            background: rgba(0, 34, 68, 0.5);
-            border: 1px solid var(--dim-color);
-            border-bottom: none;
-            color: var(--dim-color);
-            padding: 10px 20px;
-            font-family: 'VT323', monospace;
-            font-size: 18px;
-            cursor: pointer;
-            margin-right: 4px;
-            flex-grow: 1;
-            transition: 0.3s;
-        }
-        .tab-btn:hover { background-color: rgba(0, 229, 255, 0.1); color: var(--main-color); }
-        .tab-btn.active {
-            background-color: var(--main-color);
-            color: #000;
-            font-weight: bold;
-            border-color: var(--main-color);
-        }
-        
-        .tab-content { display: none; animation: fadeIn 0.4s; }
-        .tab-content.active { display: block; }
-
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        /* Contenu Texte */
-        h2 { border-bottom: 1px dashed var(--main-color); padding-bottom: 5px; color: #fff; margin-top: 0; }
-        h3 { color: var(--main-color); margin-top: 25px; text-decoration: underline; }
-        .alert { color: var(--alert-color); font-weight: bold; }
-        .badge { background: var(--main-color); color: #000; padding: 2px 6px; border-radius: 2px; font-weight: bold; font-size: 0.8em; }
-        .badge-alert { background: var(--alert-color); color: #fff; padding: 2px 6px; border-radius: 2px; font-weight: bold; font-size: 0.8em; }
-        
-        ul { padding-left: 20px; border-left: 2px solid var(--dim-color); margin-left: 5px; }
-        li { margin-bottom: 8px; list-style-type: square; }
-        blockquote { border: 1px solid var(--main-color); padding: 10px; background: rgba(0, 229, 255, 0.05); font-style: italic; margin: 20px 0; }
-
-        /* Scrollbar Bleu */
-        ::-webkit-scrollbar { width: 12px; }
-        ::-webkit-scrollbar-track { background: #001122; }
-        ::-webkit-scrollbar-thumb { background: var(--dim-color); border: 1px solid #000; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--main-color); }
+        .letter-content strong { color: var(--text-color); }
+        .signature { margin-top: 40px; font-style: italic; color: var(--text-color); }
 
     </style>
 </head>
 <body>
 
-    <div class="crt-overlay"></div>
-
-    <audio id="bg-music" loop>
-        <source src="ost.mp3" type="audio/mpeg">
-    </audio>
-
-    <div id="boot-screen">
-        <div id="boot-logo-container">
-            <img src="https://placehold.co/400x400/000000/ffffff?text=CCG+LOGO+BOOT" alt="CCG Logo" class="ccg-logo-img">
-        </div>
-        <div class="boot-text-container" id="boot-log"></div>
-    </div>
-
-    <div id="desktop">
+    <div id="monitor-frame">
         
-        <div class="desktop-icon" onclick="openWindow()">
-            <span class="icon-img">📂</span>
-            <span class="icon-label">PROJET_HELIOS.DOC</span>
-        </div>
-        <div class="desktop-icon">
-            <span class="icon-img">💾</span>
-            <span class="icon-label">DB_GHOULS</span>
-        </div>
-        <div class="desktop-icon">
-            <span class="icon-img">🛡️</span>
-            <span class="icon-label">COCHLEA_SEC</span>
-        </div>
+        <div id="boot-sequence"></div>
 
-        <div class="window" id="myWindow">
-            <div class="window-header">
-                <span>⚡ CCG DATALINK // DOSSIER: 998-HELIOS</span>
-                <span class="close-btn" onclick="closeWindow()">X</span>
+        <div id="desktop-interface">
+            <div class="top-bar">
+                <span>CCG-OS v.5.11 [TERMINAL DE COMMANDEMENT]</span>
+                <span id="clock">CONNEXION ÉTABLIE</span>
             </div>
-            <div class="window-body">
-                
-                <div class="tabs">
-                    <button class="tab-btn active" onclick="switchTab('tab1', this)">1. VUE D'ENSEMBLE</button>
-                    <button class="tab-btn" onclick="switchTab('tab2', this)">2. AUTEUR & RP</button>
-                    <button class="tab-btn" onclick="switchTab('tab3', this)">3. PROTOCOLE DÉTAILLÉ</button>
-                    <button class="tab-btn" onclick="switchTab('tab4', this)">4. RISQUES & CONCLUSION</button>
+
+            <div id="alert-tab-container">
+                <button id="open-letter-btn" class="alert-button">
+                    [!] TRANSMISSION ENTRÉE PRIORITAIRE <br>
+                    <small style="font-size: 0.8rem;">Cliquez pour décrypter</small>
+                </button>
+            </div>
+
+            <div id="letter-modal">
+                <div class="modal-header">
+                    <span>>>> DOCUMENT: CANDIDATURE_CC</span>
+                    <span class="close-btn" id="close-letter-btn">[X] FERMER</span>
                 </div>
+                <div class="letter-content">
+                    <p><strong>Objet :</strong> Candidature pour intégration à la Cellule de Commandement<br>
+                    <strong>De :</strong> [Kojinn Kusanagi], Inspecteur [3 eme classe]<br>
+                    <strong>À l'attention du :</strong> Comité de Direction du CCG</p>
 
-                <div id="tab1" class="tab-content active">
-                    <h2>I. FICHE SYNTHÉTIQUE DU PROJET</h2>
-                    <p><strong>TITRE :</strong> Projet “Hélios” – Protocole de Réhumanisation Partielle des Ghouls Détenus</p>
-                    <p><strong>TYPE :</strong> Initiative personnelle / Proposition expérimentale</p>
-                    <p><strong>STATUT :</strong> <span class="badge">EN ATTENTE D'ÉVALUATION</span></p>
-                    <p><strong>NIVEAU D'ACCÈS :</strong> Restreint / Interne Cochléa</p>
+                    <p>Messieurs les Directeurs,</p>
 
-                    <h3>CONTEXTE DE LA PROPOSITION</h3>
-                    <p>Basé sur l'observation directe des cellules Niveau 2 et 3. L'agent a noté :</p>
+                    <p>On dit souvent qu'un bon inspecteur est celui qui ne recule jamais. Après 3 ans passés à traquer les goules dans les ruelles de shibuya, j'ai appris qu'un bon inspecteur est surtout celui qui sait <em>quand</em> avancer.</p>
+
+                    <p>Ma Quinque est usée par les combats, et mon corps porte les cicatrices de nombreux affrontements. Je ne suis pas un scientifique ; je ne vous parlerai pas de taux de RC . Je suis un soldat qui a développé une compétence plus rare : <strong>la lecture du chaos</strong>.</p>
+
+                    <p>Je postule aujourd'hui pour le commandement car j'ai trop souvent vu des opérations échouer non pas par manque de puissance de feu, mais par manque de vision d'ensemble.</p>
+
+                    <p><strong>Ce que j'apporte à la table de commandement :</strong></p>
                     <ul>
-                        <li>Des variations comportementales chez les détenus.</li>
-                        <li>Des signes d’émotions humaines persistantes.</li>
-                        <li>Des fluctuations du niveau RC corrélées à l'alimentation et l'isolement.</li>
-                    </ul>
-                    <p><strong>HYPOTHÈSE :</strong> "Certains ghouls pourraient être ramenés vers un état partiellement humain par une manipulation ciblée de leurs mécanismes RC et neurologiques."</p>
-
-                    <h3>OBJECTIFS STRATÉGIQUES</h3>
-                    <p><strong>🎯 Objectif Principal :</strong> Réduire l’activité RC chez les captifs pour atténuer le besoin de chair, l'agressivité et l'instinct prédateur.</p>
-                    <p><strong>🧬 Objectif Final :</strong> Créer un protocole permettant à des ghouls “stabilisés” de vivre sous régime alimentaire humain classique (en confinement).</p>
-                    <p><strong>🎖 Intérêt pour le CCG :</strong> Réduction des coûts, diminution des risques d’émeutes, collecte de données scientifiques, sujets plus coopératifs pour interrogatoires.</p>
-                </div>
-
-                <div id="tab2" class="tab-content">
-                    <h2>II. PROFIL DE L'INITIATEUR & ANALYSE</h2>
-                    
-                    <h3>DONNÉES DE L'AGENT</h3>
-                    <p><strong>NOM :</strong> Kusanagi, Kojinn<br>
-                    <strong>MATRICULE :</strong> CCG-5128-KK<br>
-                    <strong>GRADE :</strong> Agent du CCG (Opérateur Carcéral)<br>
-                    <strong>AFFECTATION :</strong> Cochléa – Secteur de surveillance interne<br>
-                    <strong>ANCIENNETÉ :</strong> 2 ans</p>
-                    
-                    <h3>RÉPUTATION INTERNE</h3>
-                    <ul>
-                        <li>Agent discipliné, curieux, observateur.</li>
-                        <li>Noté pour son calme face aux ghouls de rang élevé.</li>
-                        <li>Intérêt marqué pour la physiologie des ghouls.</li>
+                        <li><strong>L'instinct du prédateur :</strong> Sur le terrain, j'ai appris à penser comme eux. Je n'analyse pas une goule comme un spécimen de laboratoire, mais comme un adversaire tactique. Je sais anticiper les embuscades, repérer les leurres d'organisations comme Aogiri, et transformer un terrain désavantageux en piège mortel.</li>
+                        <li><strong>La stratégie par l'exemple :</strong> Je ne compte pas diriger depuis un écran à des kilomètres. Un véritable stratège doit comprendre la peur et l'adrénaline de ses hommes pour leur donner des ordres réalisables. Je sais quelle quantité de pression une escouade peut supporter avant de se briser, car je suis à leur place.</li>
+                        <li><strong>L'efficacité du mouvement :</strong> En combat, un mouvement inutile est une ouverture pour l'ennemi. À l'échelle d'une opération, c'est pareil. Je veux optimiser le déploiement de nos forces pour frapper les points faibles de l'ennemi (les leaders, les lignes de ravitaillement) plutôt que de s'épuiser dans des escarmouches sans fin.</li>
                     </ul>
 
-                    <hr style="border-color: var(--dim-color); opacity: 0.5;">
+                    <p>Je ne demande pas ce poste pour quitter le front, mais pour avoir les moyens de changer l'issue de la bataille avant même que le premier coup ne soit porté.</p>
 
-                    <h3>VIII. ANALYSE HIÉRARCHIQUE (SIMULATION RP)</h3>
-                    <p>Réaction probable de la direction de Cochléa face à ce dossier :</p>
-                    
-                    <p><span class="badge">SCÉNARIO A</span> <strong>ACCEPTATION PARTIELLE :</strong><br>
-                    Autorisation d'un test d'observation non intrusif uniquement.</p>
-                    
-                    <p><span class="badge">SCÉNARIO B</span> <strong>CLASSEMENT :</strong><br>
-                    Le dossier est archivé, mais l'agent est surveillé pour son "potentiel scientifique".</p>
-                    
-                    <p><span class="badge-alert">SCÉNARIO C</span> <strong>ALERTE ROUGE :</strong><br>
-                    Le projet est jugé dangereux. Colère des enquêteurs radicaux qui voient cela comme une sympathie envers l'ennemi.</p>
-                    
-                    <p><em>Note RP : Ce dossier crée un terrain de jeu idéal (méfiance des collègues, intérêt des scientifiques fous, surveillance).</em></p>
-                </div>
+                    <p>Je veux que les jeunes inspecteurs sous mes ordres rentrent chez eux le soir. Et pour cela, il nous faut plus que de la force brute : il nous faut une tête pensante qui a connu l'odeur du sang.</p>
 
-                <div id="tab3" class="tab-content">
-                    <h2>III. MÉTHODOLOGIE PROPOSÉE</h2>
-                    <p>Kojinn Kusanagi propose un protocole en 4 phases progressives.</p>
+                    <p>Je suis prêt à prendre ces responsabilités.</p>
 
-                    <h3>PHASE 1 : OBSERVATION APPROFONDIE</h3>
-                    <ul>
-                        <li>Sélection de 3 à 5 ghouls présentant une faible agressivité naturelle.</li>
-                        <li>Surveillance quotidienne : réactions émotionnelles, appétit, niveau RC.</li>
-                        <li><strong>But :</strong> Repérer les sujets prédisposés à la "réhumanisation".</li>
-                    </ul>
+                    <p>Respectueusement,</p>
 
-                    <h3>PHASE 2 : MANIPULATION ENVIRONNEMENTALE</h3>
-                    <ul>
-                        <li>Réduction progressive de l'apport en chair humaine.</li>
-                        <li>Exposition contrôlée à des stimuli humains (musique classique/calme, conversations, médias).</li>
-                        <li><strong>Théorie :</strong> Un environnement moins "carcéral/bestial" peut réactiver des réflexes sociaux humains.</li>
-                    </ul>
-
-                    <h3>PHASE 3 : MICRO-DOSAGE D'INHIBITEURS RC</h3>
-                    <ul>
-                        <li>Collaboration requise avec l'équipe médicale.</li>
-                        <li>Injection de faibles doses d'inhibiteurs CRC.</li>
-                        <li>Observation des effets sur l'humeur et la faim.</li>
-                        <li><strong>Hypothèse :</strong> Abaisser artificiellement le taux RC pour imiter la biologie humaine.</li>
-                    </ul>
-
-                    <h3>PHASE 4 : RÉINTRODUCTION ALIMENTAIRE</h3>
-                    <ul>
-                        <li>Introduction progressive d'aliments humains.</li>
-                        <li>Menu test : Soupe, protéines naturelles liquides, compléments nutritionnels.</li>
-                        <li>Suivi strict de la tolérance digestive (vomissements, rejet).</li>
-                    </ul>
-                </div>
-
-                <div id="tab4" class="tab-content">
-                    <h2>IV. ÉVALUATION DES RISQUES & MOTIVATIONS</h2>
-
-                    <h3 class="alert">⚠️ VI. RISQUES IDENTIFIÉS</h3>
-                    <p>L'agent reconnaît lui-même les dangers critiques de son projet :</p>
-                    <ul>
-                        <li style="color:var(--alert-color)"><strong>Agressivité imprévisible :</strong> Le manque de chair peut provoquer des crises de folie subites.</li>
-                        <li><strong>Impossibilité technique :</strong> On ne peut pas "désactiver" un Kagune totalement.</li>
-                        <li style="color:var(--alert-color)"><strong>Mutation RC :</strong> Le stress du protocole peut engendrer des mutations inattendues (Ghouls de feu/Kakuja incomplet).</li>
-                        <li><strong>Risque Politique :</strong> Opposition interne sévère (Investigateurs).</li>
-                        <li><strong>Sécurité :</strong> Risque d'évasion accru durant les manipulations.</li>
-                    </ul>
-
-                    <h3>VII. MOTIVATIONS DÉCLARÉES</h3>
-                    <p>Kusanagi justifie sa démarche par une volonté d'alternative à l'extermination systématique.</p>
-                    <blockquote>
-                        “Si certains ghouls peuvent redevenir partiellement humains, alors ils peuvent peut-être cesser d’être des monstres.”
-                    </blockquote>
-
-                    <hr>
-                    
-                    <h3>IX. CONCLUSION DU DOSSIER</h3>
-                    <p>Le Projet Hélios est une tentative audacieuse, scientifiquement fragile mais moralement atypique au sein du CCG. Il démontre une capacité d'analyse rare chez l'agent Kusanagi, bien que potentiellement dangereuse pour sa carrière.</p>
-                    
-                    <br>
-                    <div style="text-align:center; border: 1px solid var(--main-color); padding: 10px;">
-                        [ SIGNER L'ÉVALUATION DU DOSSIER ? ]<br><br>
-                        <span class="badge" style="cursor:pointer">APPROUVER</span> &nbsp; &nbsp; <span class="badge-alert" style="cursor:pointer">REJETER</span>
+                    <div class="signature">
+                        [Kojinn Kusanagi]<br>
+                        Inspecteur [3 eme classe]<br>
+                        <em>CCG - Division des Opérations</em>
                     </div>
-                </div>
-
+                    </div>
             </div>
-        </div>
 
-        <div class="taskbar">
-            <div class="start-btn">
-                <img src="https://placehold.co/100x100/000000/ffffff?text=C" alt="C"> CCG OS
-            </div>
-            
-            <div id="audio-control" class="audio-btn" onclick="toggleMusic()">🔇 AUDIO: OFF</div>
-
-            <div style="margin-left: 15px; border-left: 1px solid var(--dim-color); padding-left: 10px;">
-                USER: 5128-KK [CONNECTED]
-            </div>
-            <div class="clock" id="clock">00:00</div>
         </div>
     </div>
 
     <script>
-        // 0. AUDIO MANAGEMENT
-        const music = document.getElementById('bg-music');
-        const audioBtn = document.getElementById('audio-control');
-        music.volume = 0.5; // Volume à 50% pour ne pas exploser les oreilles
+        // --- SCRIPT POUR GERER L'ANIMATION ---
 
-        function toggleMusic() {
-            if (music.paused) {
-                music.play().then(() => {
-                    updateAudioBtn(true);
-                }).catch(e => {
-                    console.log("Erreur lecture:", e);
-                    alert("Erreur: Impossible de lire le fichier 'ost.mp3'. Vérifiez qu'il est bien sur GitHub.");
-                });
-            } else {
-                music.pause();
-                updateAudioBtn(false);
-            }
-        }
-
-        function updateAudioBtn(isPlaying) {
-            if (isPlaying) {
-                audioBtn.innerHTML = "🔊 AUDIO: ON";
-                audioBtn.classList.add('active');
-            } else {
-                audioBtn.innerHTML = "🔇 AUDIO: OFF";
-                audioBtn.classList.remove('active');
-            }
-        }
-
-        // 1. BOOT SEQUENCE
-        const bootLog = document.getElementById('boot-log');
-        const bootLines = [
-            "CCG BIOS v5.0 LOGO_ENHANCED - INITIALIZING...",
-            "CHECKING HOLOGRAPHIC DISPLAY... OK",
-            "LOADING RC-GATE KERNEL [BLUE EDITION]...",
-            "CONNECTING TO COCHLEA MAIN SERVER...",
-            "AUTHENTICATION REQUIRED...",
-            "................",
-            "ACCESS GRANTED.",
-            "WELCOME, OPERATOR."
+        const bootText = [
+            "> INITIALISATION DU NOYAU CCG...",
+            "> CHARGEMENT DES PROTOCOLES DE DÉFENSE...",
+            "> VÉRIFICATION BIOMÉTRIQUE... OK.",
+            "> SCAN DU RÉSEAU POUR MENACES RC... NÉGATIF.",
+            "> CONNEXION AUX SERVEURS CENTRAUX...",
+            "> ACCÈS AUTORISÉ. NIVEAU 3.",
+            "> CHARGEMENT DE L'INTERFACE UTILISATEUR..."
         ];
+
+        const bootContainer = document.getElementById('boot-sequence');
+        const desktopInterface = document.getElementById('desktop-interface');
+        const openBtn = document.getElementById('open-letter-btn');
+        const closeBtn = document.getElementById('close-letter-btn');
+        const modal = document.getElementById('letter-modal');
 
         let lineIndex = 0;
 
-        function typeBoot() {
-            if (lineIndex < bootLines.length) {
-                const p = document.createElement('div');
-                p.className = 'boot-text';
-                p.textContent = bootLines[lineIndex];
-                bootLog.appendChild(p);
+        // Fonction pour afficher le texte de boot ligne par ligne
+        function typeBootSequence() {
+            if (lineIndex < bootText.length) {
+                const newLine = document.createElement('div');
+                newLine.className = 'boot-line';
+                newLine.textContent = bootText[lineIndex];
+                bootContainer.appendChild(newLine);
                 lineIndex++;
-                setTimeout(typeBoot, 200);
+                // Vitesse d'apparition des lignes (aléatoire pour faire réaliste)
+                setTimeout(typeBootSequence, Math.random() * 300 + 100);
             } else {
-                setTimeout(() => {
-                    document.getElementById('boot-screen').style.display = 'none';
-                    document.getElementById('desktop').style.display = 'block';
-                    
-                    // TENTATIVE D'AUTO-PLAY DE LA MUSIQUE
-                    // Note: Cela échouera souvent si l'utilisateur n'a pas cliqué, c'est normal.
-                    music.play().then(() => {
-                        updateAudioBtn(true);
-                    }).catch(() => {
-                        console.log("Autoplay bloqué par le navigateur - Cliquez sur le bouton Audio");
-                    });
+                // Fin du boot, on ajoute le curseur clignotant
+                const cursor = document.createElement('div');
+                cursor.className = 'blink';
+                cursor.textContent = "> _";
+                bootContainer.appendChild(cursor);
 
-                }, 1200); 
+                // Attendre 2 secondes puis afficher le bureau
+                setTimeout(() => {
+                    bootContainer.style.display = 'none';
+                    desktopInterface.style.display = 'block';
+                }, 2000);
             }
         }
 
-        window.onload = function() {
-            setTimeout(typeBoot, 500);
-            startTime();
-        };
+        // Lancer le boot au chargement
+        window.onload = typeBootSequence;
 
-        // 2. WINDOW MANAGEMENT
-        function openWindow() {
-            document.getElementById('myWindow').style.display = 'flex';
-        }
+        // Gérer l'ouverture/fermeture de la lettre
+        openBtn.addEventListener('click', () => {
+            modal.style.display = 'block';
+            // Petit son de clic futuriste (optionnel, nécessite un fichier audio)
+            // new Audio('click.mp3').play(); 
+        });
 
-        function closeWindow() {
-            document.getElementById('myWindow').style.display = 'none';
-        }
+        closeBtn.addEventListener('click', () => {
+            modal.style.display = 'none';
+        });
 
-        // 3. TAB MANAGEMENT
-        function switchTab(tabId, btnElement) {
-            const contents = document.querySelectorAll('.tab-content');
-            contents.forEach(div => div.classList.remove('active'));
-            const buttons = document.querySelectorAll('.tab-btn');
-            buttons.forEach(btn => btn.classList.remove('active'));
-            document.getElementById(tabId).classList.add('active');
-            btnElement.classList.add('active');
-        }
-
-        // 4. CLOCK
-        function startTime() {
-            const today = new Date();
-            let h = today.getHours();
-            let m = today.getMinutes();
-            m = checkTime(m);
-            document.getElementById('clock').innerHTML = h + ":" + m;
-            setTimeout(startTime, 1000);
-        }
-
-        function checkTime(i) {
-            if (i < 10) {i = "0" + i};
-            return i;
-        }
     </script>
+
 </body>
 </html>
